@@ -1,0 +1,303 @@
+{
+ "cells": [
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## Tutorial sobre superficies de clasificación y margen en SVM\n",
+    "Código adaptado de \"Python Data Science Handbook\" y la documentación oficial de scikit-learn"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "%matplotlib inline\n",
+    "import matplotlib.pyplot as plt\n",
+    "import seaborn as sns; sns.set()\n",
+    "from matplotlib.colors import ListedColormap"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "plt.rcParams['figure.figsize'] = [12, 8]\n",
+    "plt.rcParams.update({'font.size': 14})\n",
+    "cm_bright = ListedColormap(['#FF0000', '#0000FF'])"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "### Generación y visualización del conjunto de datos"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "from sklearn.datasets import make_circles\n",
+    "X, y = make_circles(100, factor=.1, noise=.1, random_state = 0)\n",
+    "plt.scatter(X[:, 0], X[:, 1], c=y, s=50, cmap=cm_bright);"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "### Visualizador de superficies de decisión de un SVM"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "import numpy as np\n",
+    "\n",
+    "def plot_decision_function(model, X, y, ax):\n",
+    "    ax.scatter(X[:, 0], X[:, 1], c=y, s=50, cmap=cm_bright);\n",
+    "    \n",
+    "    xlim = ax.get_xlim()\n",
+    "    ylim = ax.get_ylim()\n",
+    "    \n",
+    "    x = np.linspace(xlim[0], xlim[1], 30)\n",
+    "    y = np.linspace(ylim[0], ylim[1], 30)\n",
+    "    Y, X = np.meshgrid(y, x)\n",
+    "    xy = np.vstack([X.ravel(), Y.ravel()]).T\n",
+    "    P = model.decision_function(xy).reshape(X.shape)\n",
+    "    \n",
+    "    ax.contour(X, Y, P, colors='k', levels=[-1, 0, 1], alpha=0.5, linestyles=['--', '-', '--'])\n",
+    "    \n",
+    "    ax.scatter(model.support_vectors_[:, 0], model.support_vectors_[:, 1], s=300, linewidth=1, facecolors='none', edgecolors='k')\n",
+    "    ax.set_xlabel('x')\n",
+    "    ax.set_ylabel('y');"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "### Entrenamiento y visualización de un soft-margin SVM"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "from sklearn.svm import SVC\n",
+    "\n",
+    "model = SVC(kernel='linear', C=1E0).fit(X, y)\n",
+    "\n",
+    "ax = plt.gca()\n",
+    "plot_decision_function(model,X,y,ax)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "### Proyección y visualización en 3D"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "from mpl_toolkits import mplot3d\n",
+    "\n",
+    "z = np.exp(-(X ** 2).sum(1))\n",
+    "ax = plt.subplot(projection='3d')\n",
+    "ax.scatter3D(X[:, 0], X[:, 1], z, c=y, s=50, cmap=cm_bright)\n",
+    "ax.set_xlabel('x')\n",
+    "ax.set_ylabel('y')\n",
+    "ax.set_zlabel('z');"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "### Entrenamiento y visualización de un kernel-SVM"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "model = SVC(kernel='rbf', C=1E6, gamma='auto')\n",
+    "model.fit(X, y)\n",
+    "\n",
+    "ax = plt.gca()\n",
+    "plot_decision_function(model,X,y,ax)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "### Más ejemplos de kernel-SVM"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "from sklearn.datasets import make_blobs\n",
+    "X, y = make_blobs(n_samples=100, centers=2, random_state=0, cluster_std=0.6)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "model = SVC(kernel='rbf', C=1E1)\n",
+    "model.fit(X, y);"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "ax = plt.gca()\n",
+    "plot_decision_function(model,X,y,ax);"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {
+    "id": "3VaZqFlj0GaI"
+   },
+   "source": [
+    "### Visualización de superficies de múltiples kernels\n",
+    "Código adaptado de https://gist.github.com/WittmannF/60680723ed8dd0cb993051a7448f7805"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {
+    "colab": {
+     "base_uri": "https://localhost:8080/",
+     "height": 536
+    },
+    "id": "ZVuhA6-D0Djz",
+    "outputId": "e6024a3f-7f67-413c-98bc-2bc262be1c5f"
+   },
+   "outputs": [],
+   "source": [
+    "from sklearn.datasets import make_moons, make_circles\n",
+    "\n",
+    "names = [\"Linear SVM\", \"RBF SVM\", \"Poly SVM\"]\n",
+    "classifiers = [SVC(kernel=\"linear\", C=0.025),SVC(gamma=2, C=1),SVC(kernel=\"poly\", C=0.025)]\n",
+    "datasets = [make_blobs(n_samples=100, centers=2, random_state=0, cluster_std=0.6), make_moons(noise=0.3, random_state=0), make_circles(noise=0.2, factor=0.5, random_state=1)]"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {
+    "colab": {
+     "base_uri": "https://localhost:8080/",
+     "height": 536
+    },
+    "id": "ZVuhA6-D0Djz",
+    "outputId": "e6024a3f-7f67-413c-98bc-2bc262be1c5f"
+   },
+   "outputs": [],
+   "source": [
+    "figure = plt.figure(figsize=(30, 18))\n",
+    "current_subplot = 1\n",
+    "\n",
+    "for ds in datasets:\n",
+    "    \n",
+    "    X, y = ds\n",
+    "  \n",
+    "    x_min, x_max = X[:, 0].min() - .5, X[:, 0].max() + .5\n",
+    "    y_min, y_max = X[:, 1].min() - .5, X[:, 1].max() + .5\n",
+    "    xx, yy = np.meshgrid(np.arange(x_min, x_max, .02), np.arange(y_min, y_max, .02))\n",
+    "\n",
+    "    ax = plt.subplot(len(datasets), len(classifiers) + 1, current_subplot)\n",
+    "  \n",
+    "    ax.scatter(X[:, 0], X[:, 1], c=y, cmap=cm_bright)\n",
+    "    ax.set_xlim(xx.min(), xx.max())\n",
+    "    ax.set_ylim(yy.min(), yy.max())\n",
+    "    current_subplot += 1\n",
+    "\n",
+    "    for name, clf in zip(names, classifiers):\n",
+    "        \n",
+    "        clf.fit(X, y)\n",
+    "        \n",
+    "        ax = plt.subplot(len(datasets), len(classifiers) + 1, current_subplot)\n",
+    "        Z = clf.decision_function(np.c_[xx.ravel(), yy.ravel()])\n",
+    "        Z = Z.reshape(xx.shape)\n",
+    "        ax.contourf(xx, yy, Z, cmap=plt.cm.RdBu, alpha=.6)\n",
+    "        ax.scatter(X[:, 0], X[:, 1], c=y, cmap=cm_bright)\n",
+    "      \n",
+    "        ax.set_xlim(xx.min(), xx.max())\n",
+    "        ax.set_ylim(yy.min(), yy.max())\n",
+    "        ax.set_title(name)\n",
+    "        current_subplot += 1\n",
+    "\n",
+    "figure.subplots_adjust(left=.02, right=.98)\n",
+    "plt.show()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "### Algunas conclusiones\n",
+    "* SVM básicos entrenados en conjuntos de datos no lineales carecen de sentido práctico.\n",
+    "* Vectores de soporte en _kernel_-SVM entregan información relevante sobre la forma de la superficie de clasificación.\n",
+    "* Es posible comprobar empíricamente que distintos _kernels_ generan superficies de clasificación muy distintas, por lo que es encesario elegir el más adecuado a la tarea y los datos."
+   ]
+  }
+ ],
+ "metadata": {
+  "anaconda-cloud": {},
+  "colab": {
+   "provenance": []
+  },
+  "kernelspec": {
+   "display_name": "Python 3",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.8.6"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 4
+}

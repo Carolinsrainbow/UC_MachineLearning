@@ -1,0 +1,272 @@
+{
+ "cells": [
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## Tutorial sobre vectores de soporte\n",
+    "Ejemplo basado en los recursos del libro \"Python Data Science Handbook\""
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "### Configuración gráfica inicial para visualizaciones"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {
+    "id": "NmkURTUF2pBa"
+   },
+   "outputs": [],
+   "source": [
+    "%matplotlib inline\n",
+    "import matplotlib.pyplot as plt\n",
+    "import seaborn as sns; sns.set()\n",
+    "from matplotlib.colors import ListedColormap"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {
+    "id": "ptY4BxaGNotL"
+   },
+   "outputs": [],
+   "source": [
+    "plt.rcParams['figure.figsize'] = [12, 8]\n",
+    "plt.rcParams.update({'font.size': 14})\n",
+    "cm_bright = ListedColormap(['#FF0000', '#0000FF'])"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {
+    "id": "qdawpkBP450C"
+   },
+   "source": [
+    "### Generación y visualización del conjunto de datos"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {
+    "colab": {
+     "base_uri": "https://localhost:8080/",
+     "height": 594
+    },
+    "id": "wVHe2yEh2pBf",
+    "outputId": "b4e9fa1c-d6e7-4c9b-ba6e-e580bbc98702"
+   },
+   "outputs": [],
+   "source": [
+    "from sklearn.datasets import make_blobs\n",
+    "X, y = make_blobs(n_samples=100, centers=2, random_state=0, cluster_std=0.6)\n",
+    "\n",
+    "plt.scatter(X[:, 0], X[:, 1], c=y, s=50, cmap=cm_bright);"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "### Visualizador de superficies de decisión de un SVM"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "import numpy as np\n",
+    "\n",
+    "def plot_decision_function(model, X, y, ax):\n",
+    "    ax.scatter(X[:, 0], X[:, 1], c=y, s=50, cmap=cm_bright);\n",
+    "    \n",
+    "    xlim = ax.get_xlim()\n",
+    "    ylim = ax.get_ylim()\n",
+    "    \n",
+    "    x = np.linspace(xlim[0], xlim[1], 30)\n",
+    "    y = np.linspace(ylim[0], ylim[1], 30)\n",
+    "    Y, X = np.meshgrid(y, x)\n",
+    "    xy = np.vstack([X.ravel(), Y.ravel()]).T\n",
+    "    P = model.decision_function(xy).reshape(X.shape)\n",
+    "    \n",
+    "    ax.contour(X, Y, P, colors='k', levels=[-1, 0, 1], alpha=0.5, linestyles=['--', '-', '--'])\n",
+    "    \n",
+    "    ax.scatter(model.support_vectors_[:, 0], model.support_vectors_[:, 1], s=300, linewidth=1, facecolors='none', edgecolors='k')\n",
+    "    ax.set_xlabel('x')\n",
+    "    ax.set_ylabel('y');"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "### Entrenamiento y visualización de un SVM básico"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {
+    "colab": {
+     "base_uri": "https://localhost:8080/"
+    },
+    "id": "Oq85ffds2pBh",
+    "outputId": "63fb0923-1f49-4082-c57f-27ca2cf5f32d"
+   },
+   "outputs": [],
+   "source": [
+    "from sklearn.svm import SVC\n",
+    "\n",
+    "model = SVC(kernel='linear', C=1E10)\n",
+    "model.fit(X, y);"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {
+    "colab": {
+     "base_uri": "https://localhost:8080/",
+     "height": 594
+    },
+    "id": "utHFqK5_2pBo",
+    "outputId": "2c5c2f35-e7cf-4954-aca4-e142a6ea3791"
+   },
+   "outputs": [],
+   "source": [
+    "ax = plt.gca()\n",
+    "plot_decision_function(model,X,y,ax);"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {
+    "colab": {
+     "base_uri": "https://localhost:8080/"
+    },
+    "id": "uGJ8KI6_2pBs",
+    "outputId": "14597691-6850-4d58-a60a-629b3359b879"
+   },
+   "outputs": [],
+   "source": [
+    "model.support_vectors_"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "### ¿Qué pasa si cambian los puntos fuera del margen?"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {
+    "colab": {
+     "base_uri": "https://localhost:8080/",
+     "height": 393
+    },
+    "id": "YrnWHDnk2pBx",
+    "outputId": "e61acb22-e8db-424f-fefa-c064b7b18a37"
+   },
+   "outputs": [],
+   "source": [
+    "fig, ax = plt.subplots(1, 3, figsize=(16, 6))\n",
+    "fig.subplots_adjust(left=0.0625, right=1.25, wspace=0.2)\n",
+    "for axi, N in zip(ax, [60,80,100]):\n",
+    "    X_ = X[:N]\n",
+    "    y_ = y[:N]\n",
+    "    model = SVC(kernel='linear', C=1E10)\n",
+    "    model.fit(X_, y_)\n",
+    "    \n",
+    "    plot_decision_function(model, X_, y_, axi)\n",
+    "    axi.set_title(f'N = {N}')"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {
+    "id": "61m7JnsP5E5L"
+   },
+   "source": [
+    "### Vectores de soporte en un soft-margin SVM"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "X, y = make_blobs(n_samples=100, centers=2, random_state=0, cluster_std=1.2)\n",
+    "plt.scatter(X[:, 0], X[:, 1], c=y, s=50, cmap=cm_bright);"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {
+    "colab": {
+     "base_uri": "https://localhost:8080/",
+     "height": 394
+    },
+    "id": "V7BIFC3n2pB2",
+    "outputId": "19d841df-087d-4f19-b75b-e0f3ff4a041e"
+   },
+   "outputs": [],
+   "source": [
+    "fig, ax = plt.subplots(1, 3, figsize=(16, 6))\n",
+    "fig.subplots_adjust(left=0.0625, right=1.2, wspace=0.1)\n",
+    "for axi, C in zip(ax, [100, 10.0, 0.1]):\n",
+    "    model = SVC(kernel='linear', C=C).fit(X, y)\n",
+    "    plot_decision_function(model, X, y, axi)\n",
+    "    axi.set_title(f'C = {C:.1f}', size=14)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "### Algunas conclusiones\n",
+    "* SVM pueden ser fácil y rápidamente entrenados y visualizados usando scikit-learn.\n",
+    "* Es posible comprobar empíricamente que los vectores de soporte son los únicos ejemplos relevantes para la clasificación\n",
+    "* Valor de constante C puede ser directamente modificada y evaluada para encontrar la configuración más adecuada."
+   ]
+  }
+ ],
+ "metadata": {
+  "anaconda-cloud": {},
+  "colab": {
+   "provenance": []
+  },
+  "kernelspec": {
+   "display_name": "Python 3",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.8.6"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 4
+}
